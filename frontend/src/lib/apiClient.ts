@@ -39,7 +39,20 @@ function toApiError(message: string, code?: string, status?: number): ApiError {
   return { message, code, status };
 }
 
-export async function graphqlRequest<TData, TVariables extends Record<string, unknown> = Record<string, unknown>>(
+// `ApiError` is a plain object, not an `Error` subclass, so anything that
+// stores failures as AsyncState<T>'s `error: Error` (AuthContext,
+// useTaskMutations) needs to normalize whatever graphqlRequest rejected with.
+export function toError(error: unknown, fallbackMessage: string): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+  if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
+    return new Error(error.message);
+  }
+  return new Error(fallbackMessage);
+}
+
+export async function graphqlRequest<TData, TVariables = Record<string, unknown>>(
   query: string,
   variables?: TVariables,
 ): Promise<TData> {
