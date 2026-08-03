@@ -50,7 +50,7 @@ export function useAsyncFetch<T>(
   }, []);
 
   useEffect(() => {
-    return run();
+    return run(); // run() executes immediately, returns () => { cancelled = true }
     // `deps` is caller-supplied and intentionally spread into this array —
     // exhaustive-deps can't verify a variable-length array, but `run` itself
     // is stable (empty dep list) so it's safe to omit.

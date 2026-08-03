@@ -106,9 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     [handleAuthPayload],
   );
 
-  // ✅ FIXES the original's "known gap": if a token exists, resolve it
-  // against the real `me` query instead of leaving `state` stuck at
-  // "loading" forever. Skips the network call entirely when there's no
+  // Skips the network call entirely when there's no
   // stored token — nothing to resolve.
   const meFetcher = useCallback(async (): Promise<User | null> => {
     if (!getAuthToken()) {
