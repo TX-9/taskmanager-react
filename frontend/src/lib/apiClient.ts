@@ -52,6 +52,10 @@ export function toError(error: unknown, fallbackMessage: string): Error {
   return new Error(fallbackMessage);
 }
 
+// Single entry point for all GraphQL calls: attaches the JWT, normalizes both
+// HTTP-layer and GraphQL-layer errors into a consistent ApiError shape, and
+// force-logs out on any auth failure — so callers only deal with happy-path
+// data and never repeat auth or error-normalization logic themselves.
 export async function graphqlRequest<TData, TVariables = Record<string, unknown>>(
   query: string,
   variables?: TVariables,
@@ -67,6 +71,7 @@ export async function graphqlRequest<TData, TVariables = Record<string, unknown>
     body: JSON.stringify({ query, variables }),
   });
 
+  // HTTP-layer auth failure (e.g. middleware rejected the token before it reached GraphQL).
   if (response.status === 401) {
     forceLogout();
     throw toApiError("Your session has expired. Please log in again.", "UNAUTHENTICATED", 401);
@@ -78,11 +83,13 @@ export async function graphqlRequest<TData, TVariables = Record<string, unknown>
 
   const body = (await response.json()) as GraphQLResponseBody<TData>;
 
+  // GraphQL-layer failure: HTTP was 200 but the resolver rejected the operation.
   const firstError = body.errors?.[0];
   if (firstError) {
     const code = firstError.extensions?.code;
     const status = firstError.extensions?.http?.status;
 
+    // Resolver-level auth failure (token accepted by HTTP but invalid/expired at the API level).
     if (code === "UNAUTHENTICATED") {
       forceLogout();
     }

@@ -141,6 +141,8 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     return () => window.removeEventListener(AUTH_LOGOUT_EVENT, handleForcedLogout);
   }, []);
 
+  // Stable reference so context consumers don't re-render unless state,
+  // login, register, or logout actually change (all callbacks are useCallback).
   const value = useMemo<AuthContextValue>(
     () => ({
       state,
