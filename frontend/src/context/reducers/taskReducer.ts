@@ -1,19 +1,10 @@
-// Pattern: reducer + Context replaces Apollo's normalized cache for owning
-// server-derived task list state. Every state transition the original drove
-// through cache.identify/extract/updateQuery/evict/gc (Dashboard.tsx's
-// handleCreate/handleToggle/handleDelete, plus the subscription's
-// cache-merging block) gets reproduced here as explicit dispatched actions —
-// see frontend/DASHBOARD.md (original) and frontend/OPTIMISTIC_UI.md (this
-// variant) for the direct comparison.
-//
 // Each optimistic action records what it needs to undo itself, keyed by task
 // id in `pendingOperations`: UPDATE_OPTIMISTIC/DELETE_OPTIMISTIC snapshot the
 // affected task (and, for delete, its list index) since there's a prior state
 // to restore; CREATE_OPTIMISTIC just marks that a create is pending, since a
 // brand-new task has no "before" to snapshot. CONFIRM and ROLLBACK look up
 // that same id to decide how to resolve the operation — swap in the server's
-// real data, or restore the exact prior state — so the caller
-// (useTaskMutations, Chunk 18) never has to remember a snapshot itself.
+// real data, or restore the exact prior state.
 
 import type { Task, TaskPage } from "../../types/task";
 
@@ -69,7 +60,8 @@ export type TaskAction =
   | { type: "UPDATE_OPTIMISTIC"; id: string; changes: Partial<Task> }
   | { type: "DELETE_OPTIMISTIC"; id: string }
   | { type: "CONFIRM"; id: string; task?: Task }
-  | { type: "ROLLBACK"; id: string };
+  | { type: "ROLLBACK"; id: string }
+  | { type: "RESET" };
 
 function withoutPending(
   pendingOperations: Record<string, PendingOperation>,
@@ -223,6 +215,12 @@ export function taskReducer(state: TaskState, action: TaskAction): TaskState {
         pendingOperations: withoutPending(state.pendingOperations, action.id),
       };
     }
+
+    case "RESET":
+      // Logout clears whatever the previous session's tasks were — the
+      // equivalent of apolloClient.clearStore() in the original, so the next
+      // user on this tab never sees a flash of stale data.
+      return initialTaskState;
 
     default:
       return state;

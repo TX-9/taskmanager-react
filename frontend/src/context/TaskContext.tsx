@@ -5,8 +5,9 @@
 // `tasks`/`totalCount`/pagination lived implicitly inside Apollo's cache
 // rather than as an explicit value anyone had to wire up.
 
-import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useReducer, type Dispatch, type ReactNode } from "react";
 import { initialTaskState, taskReducer, type TaskAction, type TaskState } from "./reducers/taskReducer";
+import { AUTH_LOGOUT_EVENT } from "../lib/authToken";
 
 export interface TaskContextValue {
   state: TaskState;
@@ -18,6 +19,15 @@ export const TaskContext = createContext<TaskContextValue | null>(null);
 
 export function TaskProvider({ children }: { children: ReactNode }): JSX.Element {
   const [state, dispatch] = useReducer(taskReducer, initialTaskState);
+
+  // Listens here rather than in useTaskMutations (Chunk 19) so the reset
+  // fires exactly once regardless of which views/hooks happen to be mounted
+  // — this is the equivalent of apolloClient.clearStore() in the original.
+  useEffect(() => {
+    const handleLogout = (): void => dispatch({ type: "RESET" });
+    window.addEventListener(AUTH_LOGOUT_EVENT, handleLogout);
+    return () => window.removeEventListener(AUTH_LOGOUT_EVENT, handleLogout);
+  }, []);
 
   return <TaskContext.Provider value={{ state, dispatch }}>{children}</TaskContext.Provider>;
 }
