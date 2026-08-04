@@ -1,9 +1,45 @@
-// Real task list, fetched via useTasks and mutated via useTaskMutations
-import { useCallback, useState, type FormEvent } from "react";
+// Real task list, fetched via useTasks and mutated via useTaskMutations.
+// TaskCard + virtualized List for presentation (Chunk 20) — no filters yet
+// (Chunk 21).
+
+import { memo, useCallback, useState, type FormEvent } from "react";
+import TaskCard from "../components/TaskCard";
+import List from "../components/List";
 import { useAuth } from "../hooks/useAuth";
 import { useTasks } from "../hooks/useTasks";
 import { useTaskMutations } from "../hooks/useTaskMutations";
 import type { Task } from "../types/task";
+
+interface TaskListItemProps {
+  task: Task;
+  onToggle: (task: Task) => void;
+  onDelete: (task: Task) => void;
+}
+
+// This wrapper exists specifically to make React.memo on <TaskCard> (see
+// components/TaskCard/index.tsx) actually work. `List`'s `renderItem` is
+// called fresh, once per task, on every render of the list — if it built the
+// compound `<TaskCard>...</TaskCard>` JSX directly, the `children` prop
+// TaskCard receives would be a brand-new object every single call, which
+// fails React.memo's shallow prop comparison regardless of whether `task`
+// itself changed. Moving the memo boundary here instead means
+// `onToggle`/`onDelete` are the raw, stable `useCallback` references from
+// Dashboard (not pre-bound per-task closures — binding happens inside this
+// component's own render instead, so it doesn't count against the memo
+// comparison), so React.memo's shallow comparison correctly bails out for
+// every row except the one that actually changed.
+const TaskListItem = memo(function TaskListItem({ task, onToggle, onDelete }: TaskListItemProps): JSX.Element {
+  return (
+    <TaskCard task={task}>
+      <TaskCard.Header task={task} />
+      <div className="flex items-center gap-3">
+        <TaskCard.Badge kind="priority" value={task.priority} />
+        <TaskCard.Badge kind="status" value={task.status} />
+        <TaskCard.Actions onToggle={() => onToggle(task)} onDelete={() => onDelete(task)} />
+      </div>
+    </TaskCard>
+  );
+});
 
 function Dashboard(): JSX.Element {
   const { user, logout } = useAuth();
@@ -66,7 +102,7 @@ function Dashboard(): JSX.Element {
         </button>
       </header>
 
-      <form onSubmit={(event) => void handleCreate(event)} className="mb-4 flex gap-2">
+      <form onSubmit={(event) => void handleCreate(event)} className="mb-6 flex gap-2">
         <input
           type="text"
           value={newTaskTitle}
@@ -90,34 +126,12 @@ function Dashboard(): JSX.Element {
       )}
 
       {state.status === "success" && (
-        <ul className="space-y-2">
-          {state.data.tasks.map((task) => (
-            <li
-              key={task.id}
-              className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2 text-sm"
-            >
-              <span>
-                {task.title} — {task.status}
-              </span>
-              <span className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => void handleToggle(task)}
-                  className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
-                >
-                  Toggle
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleDelete(task)}
-                  className="rounded-md border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                >
-                  Delete
-                </button>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <List
+          items={state.data.tasks}
+          keyExtractor={(task) => task.id}
+          emptyState="No tasks yet — add one above."
+          renderItem={(task) => <TaskListItem task={task} onToggle={handleToggle} onDelete={handleDelete} />}
+        />
       )}
     </div>
   );
