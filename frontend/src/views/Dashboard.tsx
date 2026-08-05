@@ -1,14 +1,23 @@
 // Real task list, fetched via useTasks and mutated via useTaskMutations.
-// TaskCard + virtualized List for presentation (Chunk 20) — no filters yet
-// (Chunk 21).
+// TaskCard + virtualized List for presentation. 
+// Filters/search via filterStore — pure client-only UI state (Zustand), kept
+// deliberately separate from TaskContext's server-derived data.
 
-import { memo, useCallback, useState, type FormEvent } from "react";
+import { memo, useCallback, useMemo, useState, type FormEvent } from "react";
 import TaskCard from "../components/TaskCard";
 import List from "../components/List";
 import { useAuth } from "../hooks/useAuth";
 import { useTasks } from "../hooks/useTasks";
 import { useTaskMutations } from "../hooks/useTaskMutations";
-import type { Task } from "../types/task";
+import { useDebounce } from "../hooks/useDebounce";
+import { useFilterStore, type PrioritySort } from "../store/filterStore";
+import type { Task, TaskFilter, TaskPriority, TaskStatus } from "../types/task";
+
+function sortByPriority(tasks: Task[], direction: "HIGH_FIRST" | "LOW_FIRST"): Task[] {
+  const weight: Record<TaskPriority, number> = { LOW: 0, MEDIUM: 1, HIGH: 2 };
+  const sorted = [...tasks].sort((a, b) => weight[a.priority] - weight[b.priority]);
+  return direction === "HIGH_FIRST" ? sorted.reverse() : sorted;
+}
 
 interface TaskListItemProps {
   task: Task;
@@ -43,8 +52,29 @@ const TaskListItem = memo(function TaskListItem({ task, onToggle, onDelete }: Ta
 
 function Dashboard(): JSX.Element {
   const { user, logout } = useAuth();
-  const { state } = useTasks();
+  const { statusFilter, priorityFilter, prioritySort, searchQuery, setSearchQuery } = useFilterStore();
+
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  const filter: TaskFilter = useMemo(
+    () => ({
+      ...(statusFilter !== "ALL" ? { status: statusFilter } : {}),
+      ...(priorityFilter !== "ALL" ? { priority: priorityFilter } : {}),
+      ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    }),
+    [statusFilter, priorityFilter, debouncedSearch],
+  );
+
+  const { state } = useTasks(filter);
   const { createTask, toggleStatus, deleteTask } = useTaskMutations();
+
+  // prioritySort has no TaskFilterInput equivalent on the server (see api/src/schema/typeDefs.ts) — it's applied client-side
+  const sortedTasks = useMemo(() => {
+    if (state.status !== "success") {
+      return [];
+    }
+    return prioritySort === "NONE" ? state.data.tasks : sortByPriority(state.data.tasks, prioritySort);
+  }, [state, prioritySort]);
 
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -102,6 +132,17 @@ function Dashboard(): JSX.Element {
         </button>
       </header>
 
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search tasks…"
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        />
+        <FilterControls />
+      </div>
+
       <form onSubmit={(event) => void handleCreate(event)} className="mb-6 flex gap-2">
         <input
           type="text"
@@ -127,12 +168,51 @@ function Dashboard(): JSX.Element {
 
       {state.status === "success" && (
         <List
-          items={state.data.tasks}
+          items={sortedTasks}
           keyExtractor={(task) => task.id}
           emptyState="No tasks yet — add one above."
           renderItem={(task) => <TaskListItem task={task} onToggle={handleToggle} onDelete={handleDelete} />}
         />
       )}
+    </div>
+  );
+}
+
+function FilterControls(): JSX.Element {
+  const { statusFilter, priorityFilter, prioritySort, setStatusFilter, setPriorityFilter, setPrioritySort } =
+    useFilterStore();
+
+  return (
+    <div className="flex items-center gap-2">
+      <select
+        value={statusFilter}
+        onChange={(event) => setStatusFilter(event.target.value as TaskStatus | "ALL")}
+        className="rounded-md border border-gray-300 px-2 py-2 text-sm"
+      >
+        <option value="ALL">All statuses</option>
+        <option value="TODO">To do</option>
+        <option value="IN_PROGRESS">In progress</option>
+        <option value="DONE">Done</option>
+      </select>
+      <select
+        value={priorityFilter}
+        onChange={(event) => setPriorityFilter(event.target.value as TaskPriority | "ALL")}
+        className="rounded-md border border-gray-300 px-2 py-2 text-sm"
+      >
+        <option value="ALL">All priorities</option>
+        <option value="LOW">Low</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="HIGH">High</option>
+      </select>
+      <select
+        value={prioritySort}
+        onChange={(event) => setPrioritySort(event.target.value as PrioritySort)}
+        className="rounded-md border border-gray-300 px-2 py-2 text-sm"
+      >
+        <option value="NONE">Unsorted</option>
+        <option value="HIGH_FIRST">Priority: high first</option>
+        <option value="LOW_FIRST">Priority: low first</option>
+      </select>
     </div>
   );
 }

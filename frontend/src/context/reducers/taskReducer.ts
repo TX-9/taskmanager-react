@@ -217,9 +217,8 @@ export function taskReducer(state: TaskState, action: TaskAction): TaskState {
     }
 
     case "RESET":
-      // Logout clears whatever the previous session's tasks were — the
-      // equivalent of apolloClient.clearStore() in the original, so the next
-      // user on this tab never sees a flash of stale data.
+      // Logout clears whatever the previous session's tasks were.
+      //  So the next user on this tab never sees a flash of stale data.
       return initialTaskState;
 
     default:

@@ -76,8 +76,7 @@ export function useTasks(filter?: TaskFilter, limit: number = DEFAULT_LIMIT): Us
   }, [taskState.status, taskState.hasNextPage, taskState.isLoadingMore, taskState.page, fetchPage, dispatch]);
 
   // Reshapes reducer state into the public AsyncState<TaskPage> shape.
-  // useMemo keeps the object reference stable so consumers don't re-render
-  // when taskState hasn't changed.
+  // useMemo keeps the object reference stable so consumers don't re-render when taskState hasn't changed.
   const state = useMemo<AsyncState<TaskPage>>(() => {
     if (taskState.status === "error") {
       return { status: "error", error: taskState.error ?? new Error("Failed to load tasks.") };

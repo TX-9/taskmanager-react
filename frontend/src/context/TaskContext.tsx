@@ -20,9 +20,8 @@ export const TaskContext = createContext<TaskContextValue | null>(null);
 export function TaskProvider({ children }: { children: ReactNode }): JSX.Element {
   const [state, dispatch] = useReducer(taskReducer, initialTaskState);
 
-  // Listens here rather than in useTaskMutations (Chunk 19) so the reset
-  // fires exactly once regardless of which views/hooks happen to be mounted
-  // — this is the equivalent of apolloClient.clearStore() in the original.
+  // Listens here rather than in useTaskMutations so the reset
+  // fires exactly once regardless of which views/hooks happen to be mounted.
   useEffect(() => {
     const handleLogout = (): void => dispatch({ type: "RESET" });
     window.addEventListener(AUTH_LOGOUT_EVENT, handleLogout);
