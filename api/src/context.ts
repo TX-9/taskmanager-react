@@ -2,8 +2,7 @@
 // token (if present) and attaches the current user id plus a fresh set of
 // per-request DataLoaders to the GraphQL context. Resolvers that require auth
 // check `context.userId` and throw via utils/errors when it's absent. For the
-// full JWT flow this is one piece of — from the frontend's Login.tsx through
-// to here — see ../../AUTH.md.
+// full JWT flow this is one piece of — from the frontend's Login.tsx through to here.
 
 import type { IncomingMessage } from "http";
 import { PrismaClient } from "@prisma/client";

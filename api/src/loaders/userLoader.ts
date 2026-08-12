@@ -1,4 +1,4 @@
-// Pattern: DataLoader for N+1 prevention (GraphQL section). Without this, resolving
+// Pattern: DataLoader for N+1 prevention. Without this, resolving
 // `Task.user` for a page of N tasks would issue N separate `SELECT * FROM users`
 // queries. DataLoader batches all `.load(userId)` calls made within a single tick
 // into one `findMany({ where: { id: { in: [...] } } })` and caches per-request.

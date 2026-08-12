@@ -51,9 +51,5 @@ export function useAsyncFetch<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
-  const refetch = useCallback(() => {
-    run();
-  }, [run]);
-
-  return { state, refetch };
+  return { state, refetch: run }; // run is already stable (empty dep array)
 }
