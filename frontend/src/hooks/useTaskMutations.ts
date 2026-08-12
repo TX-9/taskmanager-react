@@ -20,10 +20,10 @@ import type {
   UpdateTaskMutation,
   UpdateTaskMutationVariables,
 } from "../graphql/generated";
-import type { Task, UpdateTaskInput } from "../types/task";
+import type { Task, TaskPriority, UpdateTaskInput } from "../types/task";
 
 export interface UseTaskMutationsResult {
-  createTask: (title: string) => Promise<void>;
+  createTask: (title: string, priority: TaskPriority) => Promise<void>;
   updateTask: (id: string, input: UpdateTaskInput) => Promise<void>;
   toggleStatus: (task: Task) => Promise<void>;
   deleteTask: (task: Task) => Promise<void>;
@@ -56,7 +56,7 @@ export function useTaskMutations(): UseTaskMutationsResult {
   const { dispatch } = useTaskContext();
 
   const createTask = useCallback(
-    async (title: string) => {
+    async (title: string, priority: TaskPriority) => {
       // Prefixed so it can never collide with a real UUID from the server —
       // taskReducer's CONFIRM swaps this entry for the server's real task by matching on this exact id.
       const optimisticId = `temp-${crypto.randomUUID()}`;
@@ -64,9 +64,9 @@ export function useTaskMutations(): UseTaskMutationsResult {
       const optimisticTask: Task = {
         id: optimisticId,
         title,
+        priority,
         description: null,
         status: "TODO",
-        priority: "MEDIUM",
         createdAt: now,
         updatedAt: now,
         user: { id: "optimistic-user", email: "", createdAt: now },
@@ -76,7 +76,7 @@ export function useTaskMutations(): UseTaskMutationsResult {
         apply: () => dispatch({ type: "CREATE_OPTIMISTIC", task: optimisticTask }),
         request: () =>
           graphqlRequest<CreateTaskMutation, CreateTaskMutationVariables>(CREATE_TASK_MUTATION, {
-            input: { title },
+            input: { title, priority }
           }),
         confirm: (result) => dispatch({ type: "CONFIRM", id: optimisticId, task: result.createTask }),
         rollback: () => dispatch({ type: "ROLLBACK", id: optimisticId }),

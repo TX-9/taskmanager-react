@@ -77,6 +77,7 @@ function Dashboard(): JSX.Element {
   }, [state, prioritySort]);
 
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newPriority, setNewPriority] = useState<TaskPriority>("MEDIUM");
   const [formError, setFormError] = useState<string | null>(null);
 
   const handleCreate = useCallback(
@@ -86,15 +87,17 @@ function Dashboard(): JSX.Element {
       if (!title) {
         return;
       }
+      const priority = newPriority;
       setNewTaskTitle("");
+      setNewPriority("MEDIUM");
       setFormError(null);
       try {
-        await createTask(title);
+        await createTask(title, priority);
       } catch (error) {
         setFormError(error instanceof Error ? error.message : "Failed to create task.");
       }
     },
-    [newTaskTitle, createTask],
+    [newTaskTitle, newPriority, createTask],
   );
 
   const handleToggle = useCallback(
@@ -144,6 +147,15 @@ function Dashboard(): JSX.Element {
       </div>
 
       <form onSubmit={(event) => void handleCreate(event)} className="mb-6 flex gap-2">
+        <select
+          value={newPriority}
+          onChange={(event) => setNewPriority(event.target.value as TaskPriority)}
+          className="rounded-md border border-gray-300 px-2 py-2 text-sm"
+        >
+          <option value="LOW">Low</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HIGH">High</option>
+        </select>
         <input
           type="text"
           value={newTaskTitle}
