@@ -147,22 +147,25 @@ function Dashboard(): JSX.Element {
       </div>
 
       <form onSubmit={(event) => void handleCreate(event)} className="mb-6 flex gap-2">
-        <select
-          value={newPriority}
-          onChange={(event) => setNewPriority(event.target.value as TaskPriority)}
-          className="rounded-md border border-gray-300 px-2 py-2 text-sm"
-        >
-          <option value="LOW">Low</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="HIGH">High</option>
-        </select>
-        <input
-          type="text"
-          value={newTaskTitle}
-          onChange={(event) => setNewTaskTitle(event.target.value)}
-          placeholder="What needs doing?"
-          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-        />
+        <div className="flex flex-1 overflow-hidden rounded-md border border-gray-300 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+          <select
+            value={newPriority}
+            onChange={(event) => setNewPriority(event.target.value as TaskPriority)}
+            aria-label="Task priority"
+            className="border-r border-gray-300 bg-gray-50 px-2 py-2 text-sm focus:outline-none"
+          >
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+          </select>
+          <input
+            type="text"
+            value={newTaskTitle}
+            onChange={(event) => setNewTaskTitle(event.target.value)}
+            placeholder="What needs doing?"
+            className="flex-1 px-3 py-2 text-sm focus:outline-none"
+          />
+        </div>
         <button
           type="submit"
           className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
