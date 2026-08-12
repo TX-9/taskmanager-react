@@ -21,7 +21,7 @@ function sortByPriority(tasks: Task[], direction: "HIGH_FIRST" | "LOW_FIRST"): T
 
 interface TaskListItemProps {
   task: Task;
-  onToggle: (task: Task) => void;
+  onStatusChange: (task: Task, status: TaskStatus) => void;
   onDelete: (task: Task) => void;
 }
 
@@ -32,19 +32,27 @@ interface TaskListItemProps {
 // TaskCard receives would be a brand-new object every single call, which
 // fails React.memo's shallow prop comparison regardless of whether `task`
 // itself changed. Moving the memo boundary here instead means
-// `onToggle`/`onDelete` are the raw, stable `useCallback` references from
-// Dashboard (not pre-bound per-task closures — binding happens inside this
-// component's own render instead, so it doesn't count against the memo
+// `onStatusChange`/`onDelete` are the raw, stable `useCallback` references
+// from Dashboard (not pre-bound per-task closures — binding happens inside
+// this component's own render instead, so it doesn't count against the memo
 // comparison), so React.memo's shallow comparison correctly bails out for
 // every row except the one that actually changed.
-const TaskListItem = memo(function TaskListItem({ task, onToggle, onDelete }: TaskListItemProps): JSX.Element {
+const TaskListItem = memo(function TaskListItem({
+  task,
+  onStatusChange,
+  onDelete,
+}: TaskListItemProps): JSX.Element {
   return (
     <TaskCard>
       <TaskCard.Header task={task} />
       <div className="flex items-center gap-3">
         <TaskCard.Badge kind="priority" value={task.priority} />
         <TaskCard.Badge kind="status" value={task.status} />
-        <TaskCard.Actions onToggle={() => onToggle(task)} onDelete={() => onDelete(task)} />
+        <TaskCard.Actions
+          status={task.status}
+          onStatusChange={(status) => onStatusChange(task, status)}
+          onDelete={() => onDelete(task)}
+        />
       </div>
     </TaskCard>
   );
@@ -66,7 +74,7 @@ function Dashboard(): JSX.Element {
   );
 
   const { state } = useTasks(filter);
-  const { createTask, toggleStatus, deleteTask } = useTaskMutations();
+  const { createTask, updateTask, deleteTask } = useTaskMutations();
 
   // prioritySort has no TaskFilterInput equivalent on the server (see api/src/schema/typeDefs.ts) — it's applied client-side
   const sortedTasks = useMemo(() => {
@@ -100,15 +108,15 @@ function Dashboard(): JSX.Element {
     [newTaskTitle, newPriority, createTask],
   );
 
-  const handleToggle = useCallback(
-    async (task: Task) => {
+  const handleStatusChange = useCallback(
+    async (task: Task, status: TaskStatus) => {
       try {
-        await toggleStatus(task);
+        await updateTask(task.id, { status });
       } catch (error) {
         setFormError(error instanceof Error ? error.message : "Failed to update task.");
       }
     },
-    [toggleStatus],
+    [updateTask],
   );
 
   const handleDelete = useCallback(
@@ -186,7 +194,9 @@ function Dashboard(): JSX.Element {
           items={sortedTasks}
           keyExtractor={(task) => task.id}
           emptyState="No tasks yet — add one above."
-          renderItem={(task) => <TaskListItem task={task} onToggle={handleToggle} onDelete={handleDelete} />}
+          renderItem={(task) => (
+            <TaskListItem task={task} onStatusChange={handleStatusChange} onDelete={handleDelete} />
+          )}
         />
       )}
     </div>
