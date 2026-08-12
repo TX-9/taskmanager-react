@@ -1,10 +1,8 @@
-// Pattern: generic optimistic-mutation wrapper (Custom hooks + GraphQL
-// sections). The original's useOptimistic.ts leaned on Apollo automatically
-// rolling back `optimisticResponse` when the mutation rejected; here there's
-// no cache to do that for us, so `runOptimistic` makes the same three-step
+// Pattern: generic optimistic-mutation wrapper. 
+// There's no cache, so `runOptimistic` makes the three-step
 // shape explicit: apply the optimistic change, await the real request, then
 // either confirm (replace with server truth) or roll back (restore the exact
-// prior state) — both by dispatching into taskReducer (Chunk 12), which
+// prior state) — both by dispatching into taskReducer, which
 // already knows how to resolve either outcome from the snapshot it captured
 // when the optimistic action was applied.
 
@@ -60,8 +58,7 @@ export function useTaskMutations(): UseTaskMutationsResult {
   const createTask = useCallback(
     async (title: string) => {
       // Prefixed so it can never collide with a real UUID from the server —
-      // taskReducer's CONFIRM swaps this entry for the server's real task by
-      // matching on this exact id.
+      // taskReducer's CONFIRM swaps this entry for the server's real task by matching on this exact id.
       const optimisticId = `temp-${crypto.randomUUID()}`;
       const now = new Date().toISOString();
       const optimisticTask: Task = {

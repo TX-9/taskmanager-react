@@ -1,7 +1,5 @@
-// Pattern: custom hook wrapping Context API (Custom hooks section). Keeps
-// `useContext(AuthContext)` + null-check out of every component that needs
-// auth state, and gives us one place to throw a helpful error if the hook is
-// used outside <AuthProvider>.
+// Pattern: custom hook wrapping Context API. Keeps `useContext(AuthContext)` + null-check out of every component that needs
+// auth state, and gives us one place to throw a helpful error if the hook is used outside <AuthProvider>.
 
 import { useContext } from "react";
 import { AuthContext, type AuthContextValue } from "../context/AuthContext";

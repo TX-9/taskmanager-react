@@ -1,8 +1,5 @@
-// Pattern: controlled form inputs (Component patterns section) — every input
+// Pattern: controlled form inputs (Component patterns) — every input
 // value is driven by state and updated via onChange, never read from the DOM.
-// See ../../AUTH.md for the full register flow this form triggers (hash the
-// password, create the User row, sign a JWT — registering also logs you in,
-// no separate login step needed).
 
 import { useCallback, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";

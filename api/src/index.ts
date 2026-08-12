@@ -74,6 +74,20 @@ async function main(): Promise<void> {
   // lets `main()` stay a linear async function and ensures the "ready" log
   // below only prints once the server is actually accepting connections.
   await new Promise<void>((resolve) => httpServer.listen(PORT, resolve));
+  /*
+  await new Promise<void>((resolve) => {
+    httpServer.listen(PORT, () => {
+      resolve(); // explicitly calling it
+    });
+  });
+
+  1. await hits → execution PAUSES here
+  2. httpServer.listen() starts binding to PORT (async OS operation)
+  3. OS finishes binding → Node.js calls the callback (resolve)
+  4. resolve() fires → Promise flips to fulfilled
+  5. await sees the fulfilled Promise → execution RESUMES
+  6. next line runs
+  */
 
   console.log(`🚀 GraphQL server ready at http://localhost:${PORT}/graphql`);
 }

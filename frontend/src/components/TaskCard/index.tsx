@@ -1,4 +1,4 @@
-// Pattern: compound components (Component patterns section) — <TaskCard> is
+// Pattern: compound components — <TaskCard> is
 // the root and exposes TaskCard.Header / TaskCard.Actions / TaskCard.Badge as
 // static properties, so consumers compose exactly the pieces they need:
 //
@@ -8,7 +8,7 @@
 //     <TaskCard.Actions onToggle={...} onDelete={...} />
 //   </TaskCard>
 //
-// Pattern: React.memo (Performance section) — wrapped so that toggling or
+// Pattern: React.memo — wrapped so that toggling or
 // deleting one task doesn't re-render every other TaskCard in the list, as
 // long as its own `task` prop reference is unchanged.
 //
@@ -36,10 +36,8 @@ import { memo, type ReactNode } from "react";
 import Header from "./Header";
 import Actions from "./Actions";
 import Badge from "./Badge";
-import type { Task } from "../../types/task";
 
 interface TaskCardProps {
-  task: Task;
   children: ReactNode;
 }
 

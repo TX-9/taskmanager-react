@@ -50,8 +50,7 @@ export const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }): JSX.Element {
   // If a token already exists (e.g. page refresh), start in "loading" rather
   // than defaulting to "logged out" — we know there *was* a session, we just
-  // haven't confirmed it's still valid yet. The `me` fetch below is what
-  // actually resolves this.
+  // haven't confirmed it's still valid yet. The `me` fetch below is what actually resolves this.
   const [state, setState] = useState<AsyncState<User>>(() =>
     getAuthToken() ? { status: "loading" } : { status: "idle" },
   );
@@ -106,8 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     [handleAuthPayload],
   );
 
-  // Skips the network call entirely when there's no
-  // stored token — nothing to resolve.
+  // Skips the network call entirely when there's no stored token — nothing to resolve.
   const meFetcher = useCallback(async (): Promise<User | null> => {
     if (!getAuthToken()) {
       return null;

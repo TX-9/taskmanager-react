@@ -1,4 +1,4 @@
-// Pattern: route-level code splitting (Performance section) — lazy-loaded in
+// Pattern: route-level code splitting — lazy-loaded in
 // App.tsx alongside Settings, so analytics-only code never ships to users who
 // only ever visit the Dashboard.
 

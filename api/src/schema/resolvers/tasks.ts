@@ -145,12 +145,11 @@ export const taskResolvers = {
       return task;
     },
   },
-
+  // GraphQL field resolver block for the Task typ
   Task: {
     createdAt: (parent: { createdAt: Date }) => parent.createdAt.toISOString(),
     updatedAt: (parent: { updatedAt: Date }) => parent.updatedAt.toISOString(),
-    // DataLoader batches this across every task in the current page — see
-    // src/loaders/userLoader.ts for the N+1 prevention.
+    // The DataLoader batches all userId lookups from a single request into one DB query, then distributes the results back to each task.
     user: (parent: { userId: string }, _args: unknown, context: GraphQLContext) => {
       return context.loaders.userLoader.load(parent.userId);
     },

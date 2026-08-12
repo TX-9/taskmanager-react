@@ -24,6 +24,8 @@ function Login(): JSX.Element {
       setFormError(null);
       try {
         await login(email, password);
+        // Reached only on success — AuthContext's login() re-throws on failure,
+        // so any network or credential error jumps to the catch below instead.
         navigate("/", { replace: true });
       } catch (error) {
         setFormError(error instanceof Error ? error.message : "Login failed.");

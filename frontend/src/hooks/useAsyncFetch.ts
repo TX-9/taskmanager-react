@@ -1,9 +1,4 @@
-// Pattern: generic async-fetch hook, modeled on the AsyncState-returning
-// shape of the original's useTasks.ts (translating a raw async call into the
-// AsyncState<T> discriminated union), but standalone rather than
-// task-specific — for one-off reads (the `me` check in AuthContext,
-// Analytics' full task list) that don't need to go through TaskContext's
-// reducer.
+// Pattern: generic async-fetch hook, translating a raw async call into the AsyncState<T> discriminated union
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AsyncState } from "../types/async";
@@ -19,11 +14,10 @@ export function useAsyncFetch<T>(
 ): UseAsyncFetchResult<T> {
   const [state, setState] = useState<AsyncState<T>>({ status: "idle" });
 
-  // Always call the latest `fetcher` without making it a dependency itself —
-  // callers typically pass a fresh inline function each render, and adding it
-  // to the effect's deps would refetch on every render regardless of `deps`.
-  const fetcherRef = useRef(fetcher);
-  fetcherRef.current = fetcher;
+  // Always call the latest `fetcher` without making it a dependency itself — callers typically pass a fresh inline function each render,
+  // and adding it to the effect's deps would refetch on every render regardless of `deps`.
+  const fetcherRef = useRef(fetcher); // creates a mutable box. The initial value only matters on the very first render; useRef does not re-initialize on subsequent renders.
+  fetcherRef.current = fetcher; // runs on every render and keeps fetcherRef.current pointing to the newest fetcher function the caller just passed in.
 
   const run = useCallback(() => {
     let cancelled = false;

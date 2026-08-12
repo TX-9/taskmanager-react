@@ -39,7 +39,7 @@ interface TaskListItemProps {
 // every row except the one that actually changed.
 const TaskListItem = memo(function TaskListItem({ task, onToggle, onDelete }: TaskListItemProps): JSX.Element {
   return (
-    <TaskCard task={task}>
+    <TaskCard>
       <TaskCard.Header task={task} />
       <div className="flex items-center gap-3">
         <TaskCard.Badge kind="priority" value={task.priority} />

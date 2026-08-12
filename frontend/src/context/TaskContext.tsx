@@ -1,9 +1,4 @@
-// Pattern: reducer + Context standing in for the role Apollo's normalized
-// cache played in the original — a single source of truth for server-derived
-// task list state that any component/hook can read or dispatch into without
-// prop drilling. No equivalent context exists in the original at all; there,
-// `tasks`/`totalCount`/pagination lived implicitly inside Apollo's cache
-// rather than as an explicit value anyone had to wire up.
+// Pattern: reducer + Context
 
 import { createContext, useContext, useEffect, useReducer, type Dispatch, type ReactNode } from "react";
 import { initialTaskState, taskReducer, type TaskAction, type TaskState } from "./reducers/taskReducer";
