@@ -36,6 +36,11 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+          # actions/setup-node hashes this file to build the npm cache key.
+          # package-lock.json is used (not package.json) because it records the
+          # exact installed version of every package. package.json only has
+          # ranges like "^18.0.0", so its hash would stay the same even when
+          # npm resolves a newer patch version — causing a stale cache hit.
           cache-dependency-path: api/package-lock.json
       - run: npm ci
       - run: npm run prisma:generate
@@ -58,6 +63,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+          # Same reasoning as the api job: exact versions, not ranges.
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run typecheck
